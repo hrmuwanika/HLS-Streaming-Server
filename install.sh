@@ -33,6 +33,7 @@ sudo echo "" > /usr/local/nginx/conf/nginx.conf
 sudo cat <<EOF > /usr/local/nginx/conf/nginx.conf
 
 #############################################################################
+
 #user  nobody;
 worker_processes  auto;
 
@@ -40,7 +41,7 @@ worker_processes  auto;
 #error_log  logs/error.log  notice;
 #error_log  logs/error.log  info;
 
-pid        /var/run/nginx.pid;
+pid   /var/run/nginx.pid;
 
 events {
     worker_connections  1024;
@@ -49,7 +50,7 @@ events {
 # RTMP configuration
 rtmp {
     server {
-        listen 1935;        # Listen on standard RTMP port
+        listen 1935;         # Listen on standard RTMP port
         chunk_size 4000;
 
         application stream {
@@ -80,7 +81,7 @@ http {
     aio on;
     directio 512;
     
-    include       mime.types;
+    include mime.types;
     default_type application/octet-stream;
 
     server {
@@ -96,56 +97,38 @@ http {
 			
 			root /usr/local/nginx/html/stream;
             
-            # Disable cache
-            add_header Cache-Control no-cache; 
+                        # Disable cache
+                        add_header Cache-Control no-cache; 
 			
 			# CORS setup
 			add_header 'Access-Control-Allow-Origin' '*' always;
-			add_header 'Access-Control-Expose-Headers' 'Content-Length';
-            
-			# allow CORS preflight requests
-			if ($request_method = 'OPTIONS') {
-				add_header 'Access-Control-Allow-Origin' '*';
-				add_header 'Access-Control-Max-Age' 1728000;
-				add_header 'Content-Type' 'text/plain charset=UTF-8';
-				add_header 'Content-Length' 0;
-				return 204;
-			}
-		}
+			add_header 'Access-Control-Expose-Headers' 'Content-Length';       
+		      }
 		
-        # Serve DASH fragments
-        location /dash {
-            types {
-                application/dash+xml mpd;
-                video/mp4 mp4;
-            }
+               # Serve DASH fragments
+               location /dash {
+                     types {
+                             application/dash+xml mpd;
+                             video/mp4 mp4;
+                     }
 
-			root /usr/local/nginx/html/stream;
+		     root /usr/local/nginx/html/stream;
             
-			# Disable cache
-			add_header Cache-Control no-cache; 
+		     # Disable cache
+		     add_header Cache-Control no-cache; 
 
-            # CORS setup
-            add_header 'Access-Control-Allow-Origin' '*' always;
-            add_header 'Access-Control-Expose-Headers' 'Content-Length';
-
-            # Allow CORS preflight requests
-            if ($request_method = 'OPTIONS') {
-                add_header 'Access-Control-Allow-Origin' '*';
-                add_header 'Access-Control-Max-Age' 1728000;
-                add_header 'Content-Type' 'text/plain charset=UTF-8';
-                add_header 'Content-Length' 0;
-                return 204;
-            }
-        }		
+                     # CORS setup
+                     add_header 'Access-Control-Allow-Origin' '*' always;
+                     add_header 'Access-Control-Expose-Headers' 'Content-Length';
+                    }		
 		
-		# This URL provides RTMP statistics in XML
-		location /stat {
+		    # This URL provides RTMP statistics in XML
+		    location /stat {
 			rtmp_stat all;
 			rtmp_stat_stylesheet stat.xsl; # Use stat.xsl stylesheet 
-		}
+		    }
 
-		location /stat.xsl {
+		    location /stat.xsl {
 			# XML stylesheet to view RTMP stats.
 			root /usr/local/nginx/html;
 		}
