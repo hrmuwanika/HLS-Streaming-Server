@@ -8,7 +8,7 @@ sudo apt install -y ffmpeg
 ffmpeg -version
 
 # Install nginx dependencies
-sudo apt install -y build-essential libpcre3 libpcre3-dev libssl-dev git
+sudo apt install -y build-essential libpcre3 libpcre3-dev libssl-dev zlib1g zlib1g-dev git
 
 sudo mkdir ~/build && cd ~/build
 
