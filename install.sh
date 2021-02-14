@@ -8,7 +8,7 @@ sudo apt install -y ffmpeg
 ffmpeg -version
 
 # Install nginx dependencies
-sudo apt install -y build-essential libpcre3 libpcre3-dev libssl-dev zlib1g zlib1g-dev git
+sudo apt install -y build-essential libpcre3 libpcre3-dev libssl-dev zlib1g-dev git
 
 sudo mkdir ~/build && cd ~/build
 
@@ -34,8 +34,15 @@ sudo echo "" > nginx.conf
 sudo cat <<EOF > nginx.conf
 
 #############################################################################
-
+#user  nobody;
 worker_processes  auto;
+
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+#error_log  logs/error.log  info;
+
+pid        /var/run/nginx.pid;
+
 events {
     worker_connections  1024;
 }
@@ -48,11 +55,19 @@ rtmp {
 
         application myapp {
             live on;
+            
             # Turn on HLS
             hls on;
-            hls_path /mnt/hls/;
+            hls_path /usr/local/nginx/html/stream/hls;
             hls_fragment 3;
             hls_playlist_length 60;
+            
+            # MPEG-DASH is similar to HLS
+            dash on;
+            dash_path /usr/local/nginx/html/stream/dash;
+            dash_fragment 5;
+            dash_playlist_length 30;
+                
             # disable consuming the stream from nginx as rtmp
             deny play all;
         }
@@ -62,23 +77,48 @@ rtmp {
 http {
     sendfile off;
     tcp_nopush on;
-    aio on;
+    # aio off;
     directio 512;
+    
+    include       mime.types;
     default_type application/octet-stream;
 
     server {
         listen 8080;
         server_name example.com;
 
-        location / {
+        # This URL provides RTMP statistics in XML
+        location /stat {
+            rtmp_stat all;
+
+            # Use this stylesheet to view XML as web page
+            # in browser
+            rtmp_stat_stylesheet /usr/local/nginx/html/stat.xsl;
+        }
+
+        location /stat.xsl {
+            # XML stylesheet to view RTMP stats.
+            # Copy stat.xsl wherever you want
+            # and put the full directory path here
+            root /usr/local/nginx/html;
+        }
+
+        location /hls {
+            # Serve HLS fragments
+            types {
+                application/vnd.apple.mpegurl m3u8;
+                video/mp2t ts;
+            }
+            
             # Disable cache
-            add_header 'Cache-Control' 'no-cache';
+            root /usr/local/nginx/html/stream;
+            add_header Cache-Control no-cache;
 
             # CORS setup
             add_header 'Access-Control-Allow-Origin' '*' always;
-            add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range';
+            add_header 'Access-Control-Expose-Headers' 'Content-Length';
 
-            # allow CORS preflight requests
+            # Allow CORS preflight requests
             if ($request_method = 'OPTIONS') {
                 add_header 'Access-Control-Allow-Origin' '*';
                 add_header 'Access-Control-Max-Age' 1728000;
@@ -86,14 +126,31 @@ http {
                 add_header 'Content-Length' 0;
                 return 204;
             }
+        }
 
+        location /dash {
+            # Serve DASH fragments
             types {
                 application/dash+xml mpd;
-                application/vnd.apple.mpegurl m3u8;
-                video/mp2t ts;
+                video/mp4 mp4;
             }
+            
+            # Disable cache
+            root /usr/local/nginx/html/stream;
+            add_header Cache-Control no-cache;
 
-            root /mnt/;
+            # CORS setup
+            add_header 'Access-Control-Allow-Origin' '*' always;
+            add_header 'Access-Control-Expose-Headers' 'Content-Length';
+
+            # Allow CORS preflight requests
+            if ($request_method = 'OPTIONS') {
+                add_header 'Access-Control-Allow-Origin' '*';
+                add_header 'Access-Control-Max-Age' 1728000;
+                add_header 'Content-Type' 'text/plain charset=UTF-8';
+                add_header 'Content-Length' 0;
+                return 204;
+            }
         }
     }
 }
