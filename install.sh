@@ -86,58 +86,44 @@ http {
     server {
         listen 8080;
         server_name example.com;
-
-        # This URL provides RTMP statistics in XML
-        location /stat {
-            rtmp_stat all;
-
-            # Use this stylesheet to view XML as web page
-            # in browser
-            rtmp_stat_stylesheet /usr/local/nginx/html/stat.xsl;
-        }
-
-        location /stat.xsl {
-            # XML stylesheet to view RTMP stats.
-            # Copy stat.xsl wherever you want
-            # and put the full directory path here
-            root /usr/local/nginx/html;
-        }
-
-        location /hls {
-            # Serve HLS fragments
-            types {
-                application/vnd.apple.mpegurl m3u8;
-                video/mp2t ts;
-            }
+		
+		# Serve HLS fragments
+		location /hls {
+			types {
+				application/vnd.apple.mpegurl m3u8;
+				video/mp2t ts;
+			}
+			
+			root /usr/local/nginx/html/stream;
             
             # Disable cache
-            root /usr/local/nginx/html/stream;
-            add_header Cache-Control no-cache;
-
-            # CORS setup
-            add_header 'Access-Control-Allow-Origin' '*' always;
-            add_header 'Access-Control-Expose-Headers' 'Content-Length';
-
-            # Allow CORS preflight requests
-            if ($request_method = 'OPTIONS') {
-                add_header 'Access-Control-Allow-Origin' '*';
-                add_header 'Access-Control-Max-Age' 1728000;
-                add_header 'Content-Type' 'text/plain charset=UTF-8';
-                add_header 'Content-Length' 0;
-                return 204;
-            }
-        }
-
+            add_header Cache-Control no-cache; 
+			
+			# CORS setup
+			add_header 'Access-Control-Allow-Origin' '*' always;
+			add_header 'Access-Control-Expose-Headers' 'Content-Length';
+            
+			# allow CORS preflight requests
+			if ($request_method = 'OPTIONS') {
+				add_header 'Access-Control-Allow-Origin' '*';
+				add_header 'Access-Control-Max-Age' 1728000;
+				add_header 'Content-Type' 'text/plain charset=UTF-8';
+				add_header 'Content-Length' 0;
+				return 204;
+			}
+		}
+		
+        # Serve DASH fragments
         location /dash {
-            # Serve DASH fragments
             types {
                 application/dash+xml mpd;
                 video/mp4 mp4;
             }
+
+			root /usr/local/nginx/html/stream;
             
-            # Disable cache
-            root /usr/local/nginx/html/stream;
-            add_header Cache-Control no-cache;
+			# Disable cache
+			add_header Cache-Control no-cache; 
 
             # CORS setup
             add_header 'Access-Control-Allow-Origin' '*' always;
@@ -151,12 +137,27 @@ http {
                 add_header 'Content-Length' 0;
                 return 204;
             }
-        }
-    }
+        }		
+		
+		# This URL provides RTMP statistics in XML
+		location /stat {
+			rtmp_stat all;
+			rtmp_stat_stylesheet stat.xsl; # Use stat.xsl stylesheet 
+		}
+
+		location /stat.xsl {
+			# XML stylesheet to view RTMP stats.
+			root /usr/local/nginx/html;
+		}
+	}
 }
 
 ######################################################################
 EOF
+
+mkdir /usr/local/nginx/html/stream
+mkdir /usr/local/nginx/html/stream/hls
+mkdir /usr/local/nginx/html/stream/dash
 
 # Create Nginx systemd daemon
 sudo cat <<EOF > /lib/systemd/system/nginx.service
