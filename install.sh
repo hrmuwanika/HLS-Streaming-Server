@@ -53,8 +53,9 @@ rtmp {
         listen 1935;        # Listen on standard RTMP port
         chunk_size 4000;
 
-        application myapp {
+        application stream {
             live on;
+            # pull rtmp://origin-rtmp-server:1935/live name=m3tv static; 
             
             # Turn on HLS
             hls on;
