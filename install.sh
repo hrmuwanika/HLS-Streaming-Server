@@ -1,5 +1,29 @@
-sudo apt update
-sudo apt -y upgrade
+#!/bin/bash
+
+################################################################################
+# Script for installing Nginx RTMP module
+# Author: Henry Robert Muwanika
+#-------------------------------------------------------------------------------
+#
+# Place this content in it and then make the file executable:
+# sudo chmod +x install.sh
+################################################################################
+
+#----------------------------------------------------
+# Disable password authentication
+#----------------------------------------------------
+sudo sed -i 's/#ChallengeResponseAuthentication yes/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+sudo sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config 
+sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+sudo service sshd restart
+
+#--------------------------------------------------
+# Update Server
+#--------------------------------------------------
+echo -e "\n============== Update Server ======================="
+sudo apt update 
+sudo apt upgrade -y
+sudo apt autoremove -y
 
 # Install FFMPEG
 sudo add-apt-repository ppa:jonathonf/ffmpeg-4
@@ -66,8 +90,8 @@ rtmp {
             # MPEG-DASH is similar to HLS
             dash on;
             dash_path /usr/local/nginx/html/stream/dash;
-            dash_fragment 5;
-            dash_playlist_length 30;
+            dash_fragment 5s;
+            dash_playlist_length 30s;
                 
             # disable consuming the stream from nginx as rtmp
             deny play all;
