@@ -4,11 +4,11 @@ sudo apt -y upgrade
 # Install FFMPEG
 sudo add-apt-repository ppa:jonathonf/ffmpeg-4
 sudo apt update
-sudo apt install -y ffmpeg
+sudo apt install -y ffmpeg libav-tools x264 x265
 ffmpeg -version
 
 # Install nginx dependencies
-sudo apt install -y build-essential libpcre3 libpcre3-dev libssl-dev zlib1g-dev git
+sudo apt install -y build-essential libpcre3 libpcre3-dev libssl-dev zlib1g-dev unzip git
 
 sudo mkdir ~/build && cd ~/build
 
@@ -21,17 +21,16 @@ sudo tar xzf nginx-1.19.6.tar.gz
 cd nginx-1.19.6
 
 # Build nginx with nginx-rtmp
-sudo ./configure --with-http_ssl_module --add-module=../nginx-rtmp-module
-sudo make -j 1
+sudo ./configure --with-http_ssl_module --with-http_stub_status_module --with-file-aio --add-module=../nginx-rtmp-module
+sudo make 
 sudo make install
 
 # Start nginx server
 sudo /usr/local/nginx/sbin/nginx
 
 # Setup live streaming
-cd /usr/local/nginx/conf/
-sudo echo "" > nginx.conf
-sudo cat <<EOF > nginx.conf
+sudo echo "" > /usr/local/nginx/conf/nginx.conf
+sudo cat <<EOF > /usr/local/nginx/conf/nginx.conf
 
 #############################################################################
 #user  nobody;
@@ -78,7 +77,7 @@ rtmp {
 http {
     sendfile off;
     tcp_nopush on;
-    # aio off;
+    aio on;
     directio 512;
     
     include       mime.types;
@@ -159,9 +158,39 @@ http {
 ######################################################################
 EOF
 
-# Restart Nginx
-sudo /usr/local/nginx/sbin/nginx -s stop
-sudo /usr/local/nginx/sbin/nginx
+# Create Nginx systemd daemon
+sudo cat <<EOF > /lib/systemd/system/nginx.service
 
+[Unit]
+Description=The NGINX HTTP and reverse proxy server
+After=syslog.target network-online.target remote-fs.target nss-lookup.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/nginx.pid
+ExecStartPre=/usr/local/nginx/sbin/nginx -t -c /usr/local/nginx/conf/nginx.conf
+ExecStart=/usr/local/nginx/sbin/nginx -c /usr/local/nginx/conf/nginx.conf
+ExecReload=/usr/local/nginx/sbin/nginx -s reload -c /usr/local/nginx/conf/nginx.conf
+ExecStop=/bin/kill -s QUIT $MAINPID
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable nginx.service
+sudo systemctl restart nginx.service
+
+###### Install SSL Certificates #########
+sudo apt install software-properties-common -y
+sudo snap install core; sudo snap refresh core
+sudo snap install --classic certbot
+sudo ln -s /snap/bin/certbot /usr/bin/certbot
+sudo certbot --nginx -d jeswilliamsshop.com --noninteractive --agree-tos --email hrmuwanika@gmail.com --redirect
+sudo systemctl reload nginx
+ 
 # Publish
-# ffmpeg -re -i /var/Videos/test.mp4 -c copy -f flv rtmp://localhost/myapp/mystream
+# ffmpeg -re -i /var/Videos/test.mp4 -c copy -f flv rtmp://localhost/stream/mystreamkey
