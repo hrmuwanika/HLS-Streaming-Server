@@ -99,19 +99,27 @@ rtmp {
     }
 }
             
-http {
-    sendfile off;
-    tcp_nopush on;
-    aio on;
-    directio 512;
-    keepalive_timeout  65;
+http  {
+                sendfile off;
+                tcp_nopush on;
+                aio on;
+                directio 512;
     
-    include mime.types;
-    default_type application/octet-stream;
+                keepalive_timeout  65;
+    
+                include mime.types;
+                default_type application/octet-stream;
 
     server {
-        listen 8080;
-        server_name example.com;
+                listen 443;
+                server_name example.com;
+	
+	        # Uncomment these lines to enable SSL.
+                # Update the ssl paths with your own certificate and private key.
+            
+                # listen ${HTTPS_PORT} ssl;
+                # ssl_certificate     /opt/certs/example.com.crt;
+                # ssl_certificate_key /opt/certs/example.com.key;
 		
 		location / {
                        root   html;
