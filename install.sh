@@ -59,7 +59,7 @@ sudo cat <<EOF > /usr/local/nginx/conf/nginx.conf
 #############################################################################
 
 #user  nobody;
-worker_processes  auto;
+worker_processes  1;
 
 #error_log  logs/error.log;
 #error_log  logs/error.log  notice;
@@ -75,7 +75,7 @@ events {
 rtmp {
     server {
         listen 1935;         # Listen on standard RTMP port
-        chunk_size 4096;
+        chunk_size 4000;
 
         application stream {
             live on;
@@ -111,13 +111,12 @@ http  {
                 default_type application/octet-stream;
 
     server {
-                listen 443;
+                listen 443 ssl;
                 server_name example.com;
 	
 	        # Uncomment these lines to enable SSL.
                 # Update the ssl paths with your own certificate and private key.
             
-                # listen ${HTTPS_PORT} ssl;
                 # ssl_certificate     /opt/certs/example.com.crt;
                 # ssl_certificate_key /opt/certs/example.com.key;
 		
@@ -147,11 +146,11 @@ http  {
                  # Serve DASH fragments
                  location /dash {
                           types {
-                                    application/dash+xml mpd;
-                                    video/mp4 mp4;
+                                  application/dash+xml mpd;
+                                  video/mp4 mp4;
                        }
 
-		       root /usr/local/nginx/html/stream;
+		        root /usr/local/nginx/html/stream;
             
 		        # Disable cache
 		        add_header Cache-Control no-cache; 
@@ -164,19 +163,16 @@ http  {
 		
 		        # This URL provides RTMP statistics in XML
 		        location /stat {
-			                  rtmp_stat all;
-			                  rtmp_stat_stylesheet stat.xsl; 
+			                rtmp_stat all;
+			                rtmp_stat_stylesheet stat.xsl; 
 		        }
 
 		        location /stat.xsl {
 			               # XML stylesheet to view RTMP stats.
+                                       # Copy stat.xsl wherever you want
+                                       # and put the full directory path here
 			               root /usr/local/nginx/html;
-		        }
-		    
-		        location /crossdomain.xml {
-                                        default_type text/xml;
-                                        expires 24h;
-                       }
+		        } 
 	          }
            }
 
