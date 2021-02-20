@@ -75,7 +75,7 @@ events {
 rtmp {
     server {
         listen 1935;         # Listen on standard RTMP port
-        chunk_size 4000;
+        chunk_size 4096;
 
         application stream {
             live on;
@@ -84,8 +84,8 @@ rtmp {
             # Turn on HLS
             hls on;
             hls_path /usr/local/nginx/html/stream/hls;
-            hls_fragment 3;
-            hls_playlist_length 60;
+            hls_fragment 5;
+            hls_playlist_length 10;
             
             # MPEG-DASH is similar to HLS
             dash on;
@@ -104,6 +104,7 @@ http {
     tcp_nopush on;
     aio on;
     directio 512;
+    keepalive_timeout  65;
     
     include mime.types;
     default_type application/octet-stream;
@@ -112,6 +113,11 @@ http {
         listen 8080;
         server_name example.com;
 		
+		location / {
+                       root   html;
+                       index  index.html index.htm;
+                       }
+		       
 		# Serve HLS fragments
 		location /hls {
 			types {
@@ -123,43 +129,50 @@ http {
             
                         # Disable cache
                         add_header Cache-Control no-cache; 
+			add_header Access-Control-Allow-Origin *;
 			
 			# CORS setup
 			add_header 'Access-Control-Allow-Origin' '*' always;
 			add_header 'Access-Control-Expose-Headers' 'Content-Length';       
 		      }
 		
-               # Serve DASH fragments
-               location /dash {
-                     types {
-                             application/dash+xml mpd;
-                             video/mp4 mp4;
-                     }
+                 # Serve DASH fragments
+                 location /dash {
+                          types {
+                                    application/dash+xml mpd;
+                                    video/mp4 mp4;
+                       }
 
-		     root /usr/local/nginx/html/stream;
+		       root /usr/local/nginx/html/stream;
             
-		     # Disable cache
-		     add_header Cache-Control no-cache; 
+		        # Disable cache
+		        add_header Cache-Control no-cache; 
+		        add_header Access-Control-Allow-Origin *;
 
-                     # CORS setup
-                     add_header 'Access-Control-Allow-Origin' '*' always;
-                     add_header 'Access-Control-Expose-Headers' 'Content-Length';
-                    }		
+                        # CORS setup
+                        add_header 'Access-Control-Allow-Origin' '*' always;
+                        add_header 'Access-Control-Expose-Headers' 'Content-Length';
+                        }		
 		
-		    # This URL provides RTMP statistics in XML
-		    location /stat {
-			rtmp_stat all;
-			rtmp_stat_stylesheet stat.xsl; # Use stat.xsl stylesheet 
-		    }
+		        # This URL provides RTMP statistics in XML
+		        location /stat {
+			                  rtmp_stat all;
+			                  rtmp_stat_stylesheet stat.xsl; 
+		        }
 
-		    location /stat.xsl {
-			# XML stylesheet to view RTMP stats.
-			root /usr/local/nginx/html;
-		}
-	}
-}
+		        location /stat.xsl {
+			               # XML stylesheet to view RTMP stats.
+			               root /usr/local/nginx/html;
+		        }
+		    
+		        location /crossdomain.xml {
+                                        default_type text/xml;
+                                        expires 24h;
+                       }
+	          }
+           }
 
-######################################################################
+################################################################################################################
 EOF
 
 mkdir /usr/local/nginx/html/stream
