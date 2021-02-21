@@ -111,7 +111,7 @@ http  {
                 default_type application/octet-stream;
 
     server {
-                listen 443 ssl;
+                listen 443;
                 server_name example.com;
 	
 	        # Uncomment these lines to enable SSL.
