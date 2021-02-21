@@ -86,12 +86,15 @@ rtmp {
             hls_path /usr/local/nginx/html/stream/hls;
             hls_fragment 5;
             hls_playlist_length 10;
+	    hls_cleanup off;
+	    hls_continuous on;
             
             # MPEG-DASH is similar to HLS
             dash on;
             dash_path /usr/local/nginx/html/stream/dash;
             dash_fragment 5s;
             dash_playlist_length 30s;
+	    dash_cleanup off;
                 
             # disable consuming the stream from nginx as rtmp
             deny play all;
