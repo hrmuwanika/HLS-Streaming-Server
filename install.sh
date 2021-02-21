@@ -88,6 +88,8 @@ rtmp {
             hls_playlist_length 10;
 	    hls_cleanup off;
 	    hls_continuous on;
+	    hls_fragment_naming system;
+	    hls_datetime system;
             
             # MPEG-DASH is similar to HLS
             dash on;
@@ -103,7 +105,7 @@ rtmp {
 }
             
 http  {
-                sendfile off;
+                sendfile on;
                 tcp_nopush on;
                 aio on;
                 directio 512;
@@ -133,6 +135,7 @@ http  {
 			types {
 				application/vnd.apple.mpegurl m3u8;
 				video/mp2t ts;
+				text/html html;
 			}
 			
 			root /usr/local/nginx/html/stream;
@@ -151,6 +154,7 @@ http  {
                           types {
                                   application/dash+xml mpd;
                                   video/mp4 mp4;
+				  text/html html;
                        }
 
 		        root /usr/local/nginx/html/stream;
