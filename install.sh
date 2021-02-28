@@ -196,8 +196,6 @@ sudo apt install software-properties-common -y
 sudo snap install core; sudo snap refresh core
 sudo snap install --classic certbot
 sudo ln -s /snap/bin/certbot /usr/bin/certbot
-sudo certbot --nginx -d jeswilliamsshop.com --noninteractive --agree-tos --email hrmuwanika@gmail.com --redirect
+sudo certbot --nginx -d vps.rw --noninteractive --agree-tos --email hrmuwanika@gmail.com --redirect
 sudo systemctl reload nginx
  
-# Publish
-# ffmpeg -re -i /var/Videos/test.mp4 -c copy -f flv rtmp://localhost/stream/mystreamkey
