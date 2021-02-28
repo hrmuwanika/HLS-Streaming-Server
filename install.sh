@@ -86,17 +86,13 @@ rtmp {
             hls_path /usr/local/nginx/html/stream/hls;
             hls_fragment 5;
             hls_playlist_length 10;
-	    hls_cleanup off;
-	    hls_continuous on;
 	    hls_fragment_naming system;
-	    hls_datetime system;
             
             # MPEG-DASH is similar to HLS
             dash on;
             dash_path /usr/local/nginx/html/stream/dash;
             dash_fragment 5s;
             dash_playlist_length 30s;
-	    dash_cleanup off;
                 
             # disable consuming the stream from nginx as rtmp
             deny play all;
@@ -118,35 +114,19 @@ http  {
     server {
                 listen 443;
                 server_name example.com;
-	
-	        # Uncomment these lines to enable SSL.
-                # Update the ssl paths with your own certificate and private key.
-            
-                # ssl_certificate     /opt/certs/example.com.crt;
-                # ssl_certificate_key /opt/certs/example.com.key;
-		
-		location / {
-                       root   html;
-                       index  index.html index.htm;
-                       }
 		       
 		# Serve HLS fragments
 		location /hls {
 			types {
 				application/vnd.apple.mpegurl m3u8;
 				video/mp2t ts;
-				text/html html;
 			}
 			
 			root /usr/local/nginx/html/stream;
             
                         # Disable cache
                         add_header Cache-Control no-cache; 
-			add_header Access-Control-Allow-Origin *;
-			
-			# CORS setup
-			add_header 'Access-Control-Allow-Origin' '*' always;
-			add_header 'Access-Control-Expose-Headers' 'Content-Length';       
+			add_header Access-Control-Allow-Origin *;       
 		      }
 		
                  # Serve DASH fragments
@@ -154,7 +134,6 @@ http  {
                           types {
                                   application/dash+xml mpd;
                                   video/mp4 mp4;
-				  text/html html;
                        }
 
 		        root /usr/local/nginx/html/stream;
@@ -162,10 +141,6 @@ http  {
 		        # Disable cache
 		        add_header Cache-Control no-cache; 
 		        add_header Access-Control-Allow-Origin *;
-
-                        # CORS setup
-                        add_header 'Access-Control-Allow-Origin' '*' always;
-                        add_header 'Access-Control-Expose-Headers' 'Content-Length';
                         }		
 		
 		        # This URL provides RTMP statistics in XML
