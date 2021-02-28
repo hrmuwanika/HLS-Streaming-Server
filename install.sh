@@ -84,8 +84,8 @@ rtmp {
             # Turn on HLS
             hls on;
             hls_path /usr/local/nginx/html/stream/hls;
-            hls_fragment 5;
-            hls_playlist_length 10;
+            hls_fragment 3;
+            hls_playlist_length 20;
 	    hls_fragment_naming system;
             
             # MPEG-DASH is similar to HLS
