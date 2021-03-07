@@ -59,7 +59,7 @@ sudo cat <<EOF > /usr/local/nginx/conf/nginx.conf
 #############################################################################
 
 #user  nobody;
-worker_processes  1;
+worker_processes  auto;
 
 #error_log  logs/error.log;
 #error_log  logs/error.log  notice;
@@ -79,23 +79,21 @@ rtmp {
 
         application stream {
             live on;
-            # pull rtmp://origin-rtmp-server:1935/live name=m3tv static; 
-            
-            # Turn on HLS
+            record off;
+
             hls on;
-            hls_path /usr/local/nginx/html/stream/hls;
-            hls_fragment 3;
-            hls_playlist_length 20;
-	    hls_fragment_naming system;
-            
-            # MPEG-DASH is similar to HLS
+            hls_path /tmp/hls;
+            hls_nested on;
+            hls_fragment 2s;
+            hls_playlist_length 16s;
+
             dash on;
-            dash_path /usr/local/nginx/html/stream/dash;
-            dash_fragment 5s;
-            dash_playlist_length 30s;
-                
-            # disable consuming the stream from nginx as rtmp
-            deny play all;
+            dash_path /tmp/dash;
+            dash_nested on;
+            dash_fragment 2s;
+            dash_playlist_length 16s;
+
+            # deny play all;
         }
     }
 }
@@ -121,39 +119,35 @@ http  {
 				application/vnd.apple.mpegurl m3u8;
 				video/mp2t ts;
 			}
-			
-			root /usr/local/nginx/html/stream;
-            
-                        # Disable cache
-                        add_header Cache-Control no-cache; 
-			add_header Access-Control-Allow-Origin *;       
-		      }
+			        root /tmp;
+                                add_header Cache-Control no-cache;       
+		        }
 		
                  # Serve DASH fragments
                  location /dash {
-                          types {
-                                  application/dash+xml mpd;
-                                  video/mp4 mp4;
-                       }
+                        types {
+                                 application/dash+xml mpd;
+                                 video/mp4 mp4;
+                        }
 
-		        root /usr/local/nginx/html/stream;
-            
-		        # Disable cache
-		        add_header Cache-Control no-cache; 
-		        add_header Access-Control-Allow-Origin *;
+		                 root /tmp;
+                                 add_header Cache-Control no-cache;
                         }		
 		
 		        # This URL provides RTMP statistics in XML
 		        location /stat {
-			                rtmp_stat all;
-			                rtmp_stat_stylesheet stat.xsl; 
+			         rtmp_stat all;
+
+                                 # Use this stylesheet to view XML as web page
+                                 # in browser
+                                 rtmp_stat_stylesheet stat.xsl; 
 		        }
 
 		        location /stat.xsl {
-			               # XML stylesheet to view RTMP stats.
-                                       # Copy stat.xsl wherever you want
-                                       # and put the full directory path here
-			               root /usr/local/nginx/html;
+			         # XML stylesheet to view RTMP stats.
+                                 # Copy stat.xsl wherever you want
+                                 # and put the full directory path here
+                                 root /path/to/stat.xsl/;
 		        } 
 	          }
            }
