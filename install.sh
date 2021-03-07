@@ -82,13 +82,13 @@ rtmp {
             record off;
 
             hls on;
-            hls_path /tmp/hls;
+            hls_path /usr/local/nginx/html/stream/hls;
             hls_nested on;
             hls_fragment 2s;
             hls_playlist_length 16s;
 
             dash on;
-            dash_path /tmp/dash;
+            dash_path /usr/local/nginx/html/stream/dash;
             dash_nested on;
             dash_fragment 2s;
             dash_playlist_length 16s;
@@ -119,7 +119,7 @@ http  {
 				application/vnd.apple.mpegurl m3u8;
 				video/mp2t ts;
 			}
-			        root /tmp;
+			        root /usr/local/nginx/html/stream;
                                 add_header Cache-Control no-cache;       
 		        }
 		
@@ -130,7 +130,7 @@ http  {
                                  video/mp4 mp4;
                         }
 
-		                 root /tmp;
+		                 root /usr/local/nginx/html/stream;
                                  add_header Cache-Control no-cache;
                         }		
 		
