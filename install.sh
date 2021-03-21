@@ -28,12 +28,14 @@ sudo apt autoremove -y
 # Install FFMPEG
 sudo add-apt-repository ppa:jonathonf/ffmpeg-4
 sudo apt update
-sudo apt install -y ffmpeg libav-tools x264 x265
+sudo apt install -y ffmpeg 
 ffmpeg -version
 
 # Install Nginx and RTMP module
 sudo apt install -y nginx 
-sudo apt install -y libnginx-mod-rtmp
+sudo apt install libnginx-mod-rtmp
+sudo systemctl stop nginx
+sudo systemctl start nginx
 
 # Install nginx dependencies
 sudo apt install -y build-essential libpcre3 libpcre3-dev libssl-dev 
@@ -148,10 +150,6 @@ EOF
 mkdir /var/www/html/show
 mkdir /var/www/html/show/hls
 mkdir /var/www/html/show/dash
-
-sudo systemctl daemon-reload
-sudo systemctl enable nginx.service
-sudo systemctl restart nginx.service
 
 ###### Install SSL Certificates #########
 sudo apt install software-properties-common -y
