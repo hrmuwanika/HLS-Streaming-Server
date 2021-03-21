@@ -31,8 +31,12 @@ sudo apt update
 sudo apt install -y ffmpeg libav-tools x264 x265
 ffmpeg -version
 
+# Install Nginx and RTMP module
+sudo apt install -y nginx 
+sudo apt install -y libnginx-mod-rtmp
+
 # Install nginx dependencies
-sudo apt install build-essential libpcre3 libpcre3-dev libssl-dev nginx libnginx-mod-rtmp -y
+sudo apt install -y build-essential libpcre3 libpcre3-dev libssl-dev 
 
 sudo cat <<EOF > /etc/nginx/nginx.conf
 
@@ -94,7 +98,7 @@ http  {
     # HTTP server required to serve the player and HLS fragments
     server {
                 listen 443;
-                server_name example.com;
+                server_name vps.rw;
 		       
 		# Serve HLS fragments
 		location /hls {
