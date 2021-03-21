@@ -75,23 +75,6 @@ rtmp {
 
         application live {
             live on;         # Allows live input
-	    
-	    # for each received stream, transcode for adaptive streaming
-			# This single ffmpeg command takes the input and transforms
-			# the source into 4 different streams with different bitrates
-			# and qualities. # these settings respect the aspect ratio.
-			exec_push  /usr/local/bin/ffmpeg -i rtmp://localhost:1935/$app/$name -async 1 -vsync -1
-						-c:v libx264 -c:a aac -b:v 256k  -b:a 64k  -vf "scale=480:trunc(ow/a/2)*2"  -tune zerolatency -preset superfast -crf 23 -f flv rtmp://localhost:1935/show/$name_low
-						-c:v libx264 -c:a aac -b:v 768k  -b:a 128k -vf "scale=720:trunc(ow/a/2)*2"  -tune zerolatency -preset superfast -crf 23 -f flv rtmp://localhost:1935/show/$name_mid
-						-c:v libx264 -c:a aac -b:v 1024k -b:a 128k -vf "scale=960:trunc(ow/a/2)*2"  -tune zerolatency -preset superfast -crf 23 -f flv rtmp://localhost:1935/show/$name_high
-						-c:v libx264 -c:a aac -b:v 1920k -b:a 128k -vf "scale=1280:trunc(ow/a/2)*2" -tune zerolatency -preset superfast -crf 23 -f flv rtmp://localhost:1935/show/$name_hd720
-						-c copy -f flv rtmp://localhost:1935/show/$name_src;
-		}
-
-        # This is the HLS application
-        application show {
-	    live on;          # Allows live input from above application
-	    deny play all;    # disable consuming the stream from nginx as rtmp
 			
             hls on;                                            # Enable HTTP Live Streaming
             hls_path /usr/local/nginx/html/show/hls;         # hls fragments path
