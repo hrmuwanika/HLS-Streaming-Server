@@ -32,6 +32,9 @@ sudo apt install -y ffmpeg
 ffmpeg -version
 
 # Install Nginx and RTMP module
+sudo add-apt-repository ppa:nginx/stable
+sudo apt update
+
 sudo apt install -y nginx 
 sudo apt install libnginx-mod-rtmp
 sudo systemctl stop nginx
