@@ -94,7 +94,7 @@ rtmp {
 	    deny play all;    # disable consuming the stream from nginx as rtmp
 			
             hls on;                                            # Enable HTTP Live Streaming
-            hls_path /usr/local/nginx/html/stream/hls;         # hls fragments path
+            hls_path /usr/local/nginx/html/show/hls;         # hls fragments path
             hls_nested on;
             hls_fragment 2s;
             hls_playlist_length 16s;
@@ -108,7 +108,7 @@ rtmp {
 
             # This is the Dash application
             dash on;
-            dash_path /usr/local/nginx/html/stream/dash;       # dash fragments path
+            dash_path /usr/local/nginx/html/show/dash;       # dash fragments path
             dash_nested on;
             dash_fragment 2s;
             dash_playlist_length 16s;
@@ -139,21 +139,12 @@ http  {
 				application/vnd.apple.mpegurl m3u8;
 				video/mp2t ts;
 			}
-			        root /usr/local/nginx/html/stream;
+			        root /usr/local/nginx/html/show;
                                 add_header Cache-Control no-cache;       # Disable cache
 				
 				# CORS setup
                                 add_header 'Access-Control-Allow-Origin' '*' always;
                                 add_header 'Access-Control-Expose-Headers' 'Content-Length';
-				
-				# Allow CORS preflight requests
-                                if ($request_method = 'OPTIONS') {
-                                     add_header 'Access-Control-Allow-Origin' '*';
-                                     add_header 'Access-Control-Max-Age' 1728000;
-                                     add_header 'Content-Type' 'text/plain charset=UTF-8';
-                                     add_header 'Content-Length' 0;
-                                     return 204;
-                               }
 		        }
 		
                  # Serve DASH fragments
@@ -163,21 +154,12 @@ http  {
                                  video/mp4 mp4;
                         }
 
-		                 root /usr/local/nginx/html/stream;
+		                 root /usr/local/nginx/html/show;
                                  add_header Cache-Control no-cache;      # Disable cache
 				 
 				 # CORS setup
                                 add_header 'Access-Control-Allow-Origin' '*' always;
                                 add_header 'Access-Control-Expose-Headers' 'Content-Length';
-				
-				# Allow CORS preflight requests
-                                if ($request_method = 'OPTIONS') {
-                                     add_header 'Access-Control-Allow-Origin' '*';
-                                     add_header 'Access-Control-Max-Age' 1728000;
-                                     add_header 'Content-Type' 'text/plain charset=UTF-8';
-                                     add_header 'Content-Length' 0;
-                                     return 204;
-                               }
                         }		
 		
 		        # This URL provides RTMP statistics in XML
