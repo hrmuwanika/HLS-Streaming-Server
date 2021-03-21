@@ -43,6 +43,10 @@ sudo systemctl start nginx
 # Install nginx dependencies
 sudo apt install -y build-essential libpcre3 libpcre3-dev libssl-dev 
 
+cd /usr/src
+git clone https://github.com/arut/nginx-rtmp-module
+cp /usr/src/nginx-rtmp-module/stat.xsl /var/www/html/stat.xsl
+
 sudo cat <<EOF > /etc/nginx/nginx.conf
 
 #############################################################################
