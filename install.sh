@@ -61,6 +61,8 @@ sudo cat <<EOF > /usr/local/nginx/conf/nginx.conf
 worker_processes  auto;
 #error_log  logs/error.log;
 
+pid   /var/run/nginx.pid;
+
 events {
     worker_connections  1024;
 }
