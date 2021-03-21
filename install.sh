@@ -70,32 +70,22 @@ rtmp {
     server {
         listen 1935;         # Listen on standard RTMP port
         chunk_size 4000;
-	# ping 30s;
-	# notify_method get;
 
         application live {
             live on;         # Allows live input
 			
-            hls on;                                            # Enable HTTP Live Streaming
+            hls on;                                          # Enable HTTP Live Streaming
             hls_path /usr/local/nginx/html/show/hls;         # hls fragments path
             hls_nested on;
             hls_fragment 2s;
             hls_playlist_length 16s;
 	    
-	    # Instruct clients to adjust resolution according to bandwidth
-	    hls_variant _src BANDWIDTH=4096000;                # Source bitrate, source resolution
-	    hls_variant _hd720 BANDWIDTH=2048000;              # High bitrate, HD 720p resolution
-	    hls_variant _high BANDWIDTH=1152000;               # High bitrate, higher-than-SD resolution
-	    hls_variant _mid BANDWIDTH=448000;                 # Medium bitrate, SD resolution
-	    hls_variant _low BANDWIDTH=288000;                 # Low bitrate, sub-SD resolution
-
             # This is the Dash application
             dash on;
             dash_path /usr/local/nginx/html/show/dash;       # dash fragments path
             dash_nested on;
             dash_fragment 2s;
             dash_playlist_length 16s;
-
         }
     }
 }
