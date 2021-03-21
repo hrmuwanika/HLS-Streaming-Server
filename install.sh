@@ -196,9 +196,9 @@ http  {
 ################################################################################################################
 EOF
 
-mkdir /usr/local/nginx/html/stream
-mkdir /usr/local/nginx/html/stream/hls
-mkdir /usr/local/nginx/html/stream/dash
+mkdir /usr/local/nginx/html/show
+mkdir /usr/local/nginx/html/show/hls
+mkdir /usr/local/nginx/html/show/dash
 
 # Create Nginx systemd daemon
 sudo cat <<EOF > /lib/systemd/system/nginx.service
