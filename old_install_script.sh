@@ -28,7 +28,7 @@ sudo apt autoremove -y
 # Install FFMPEG
 sudo add-apt-repository ppa:jonathonf/ffmpeg-4
 sudo apt update
-sudo apt install -y ffmpeg libav-tools x264 x265
+sudo apt install -y ffmpeg x264 x265
 ffmpeg -version
 
 # Install nginx dependencies
