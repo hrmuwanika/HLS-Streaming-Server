@@ -12,6 +12,6 @@ ffmpeg -i movie.mp4 -vcodec copy -loop -1 -c:a aac -b:a160k -ar 44100 -strict -2
 
 * Receiving video hls and Mpeg-Dash streams
 ```
-http://ip-address:443/show/hls/stream_name/index.m3u8
-http://ip-address:443/show/dash/stream_name/index.mpd
+http://ip-address:443/hls/stream_name/index.m3u8
+http://ip-address:443/dash/stream_name/index.mpd
 ```
