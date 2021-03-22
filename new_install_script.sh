@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 
 ################################################################################
 # Script for installing Nginx RTMP module
@@ -268,20 +268,12 @@ KillMode=mixed
 [Install]
 WantedBy=multi-user.target
 
-
 EOF
 
 sudo systemctl daemon-reload
 sudo systemctl enable nginx.service
 sudo systemctl start nginx.service
 
-sudo systemctl is-enabled nginx.service
-
 ###### Install SSL Certificates #########
-sudo apt install software-properties-common -y
-sudo snap install core; sudo snap refresh core
-sudo snap install --classic certbot
-sudo ln -s /snap/bin/certbot /usr/bin/certbot
-sudo certbot --nginx -d vps.rw --noninteractive --agree-tos --email hrmuwanika@gmail.com --redirect
-sudo systemctl reload nginx
+
  
