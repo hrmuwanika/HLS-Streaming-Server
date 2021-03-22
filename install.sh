@@ -74,17 +74,17 @@ rtmp {
         chunk_size 4000;
 
         application live {
-            live on;         # Allows live input
+            live on;                   # Allows live input
 			
-            hls on;                                          # Enable HTTP Live Streaming
-            hls_path /usr/local/nginx/html/show/hls;         # hls fragments path
+            hls on;                    # Enable HTTP Live Streaming
+            hls_path /tmp/hls;         # hls fragments path
             hls_nested on;
             hls_fragment 2s;
             hls_playlist_length 16s;
 	    
             # This is the Dash application
             dash on;
-            dash_path /usr/local/nginx/html/show/dash;       # dash fragments path
+            dash_path /tmp/dash;       # dash fragments path
             dash_nested on;
             dash_fragment 2s;
             dash_playlist_length 16s;
@@ -114,7 +114,7 @@ http  {
 				application/vnd.apple.mpegurl m3u8;
 				video/mp2t ts;
 			}
-			        root /usr/local/nginx/html/show;
+			        root /tmp;
                                 add_header Cache-Control no-cache;       # Disable cache
 				
 				# CORS setup
@@ -129,7 +129,7 @@ http  {
                                  video/mp4 mp4;
                         }
 
-		                 root /usr/local/nginx/html/show;
+		                 root /tmp;
                                  add_header Cache-Control no-cache;      # Disable cache
 				 
 				 # CORS setup
@@ -153,9 +153,8 @@ http  {
 ################################################################################################################
 EOF
 
-mkdir /usr/local/nginx/html/show
-mkdir /usr/local/nginx/html/show/hls
-mkdir /usr/local/nginx/html/show/dash
+mkdir /tmp/hls
+mkdir /tmp/dash
 
 # Create Nginx systemd daemon
 sudo cat <<EOF > /lib/systemd/system/nginx.service
