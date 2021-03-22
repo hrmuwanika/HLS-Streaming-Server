@@ -34,91 +34,23 @@ sudo apt update
 sudo apt install -y ffmpeg x264 x265
 
 # Install necassry packages
-sudo apt install -y software-properties-common build-essential git ufw tree
+sudo apt install -y software-properties-common build-essential git tree
+sudo apt install -y openssl libssl-dev libpcre3 libpcre3-dev zlib1g-dev
 
 sudo mkdir ~/build && cd ~/build
 
 # Clone nginx-rtmp-module
-git clone https://github.com/sergey-dryabzhinsky/nginx-rtmp-module.git
+git clone --depth=1 https://github.com/arut/nginx-rtmp-module.git
 
-# Download nginx
-sudo https://nginx.org/download/nginx-1.19.6.tar.gz
+# Download the latest nginx
+sudo wget http://nginx.org/download/nginx-1.19.6.tar.gz
 sudo tar zxvf nginx-1.19.6.tar.gz
 cd nginx-1.19.6
 
-# Download the mandatory Nginx dependencies' source code and extract it
-# PCRE version 8.44
-wget https://ftp.pcre.org/pub/pcre/pcre-8.44.tar.gz && tar xzvf pcre-8.44.tar.gz
 
-# zlib version 1.2.11
-wget https://www.zlib.net/zlib-1.2.11.tar.gz && tar xzvf zlib-1.2.11.tar.gz
-
-# OpenSSL version 1.1.1g
-wget https://www.openssl.org/source/openssl-1.1.1g.tar.gz && tar xzvf openssl-1.1.1g.tar.gz
-
-# Install optional Nginx dependencies
-sudo apt install -y perl libperl-dev libgd3 libgd-dev libgeoip1 libgeoip-dev geoip-bin libxml2 libxml2-dev libxslt1.1 libxslt1-dev
 
 # Build nginx with nginx-rtmp
-sudo    --add-module=../nginx-rtmp-module
-sudo ./configure --prefix=/etc/nginx \
-            --sbin-path=/usr/sbin/nginx \
-            --modules-path=/usr/lib/nginx/modules \
-            --conf-path=/etc/nginx/nginx.conf \
-            --error-log-path=/var/log/nginx/error.log \
-            --pid-path=/var/run/nginx.pid \
-            --lock-path=/var/run/nginx.lock \
-            --user=nginx \
-            --group=nginx \
-            --build=Ubuntu \
-            --builddir=nginx-1.19.2 \
-            --with-select_module \
-            --with-poll_module \
-            --with-threads \
-            --with-file-aio \
-            --with-http_ssl_module \
-            --with-http_v2_module \
-            --with-http_realip_module \
-            --with-http_addition_module \
-            --with-http_xslt_module=dynamic \
-            --with-http_image_filter_module=dynamic \
-            --with-http_geoip_module=dynamic \
-            --with-http_sub_module \
-            --with-http_dav_module \
-            --with-http_flv_module \
-            --with-http_mp4_module \
-            --with-http_gunzip_module \
-            --with-http_gzip_static_module \
-            --with-http_auth_request_module \
-            --with-http_random_index_module \
-            --with-http_secure_link_module \
-            --with-http_degradation_module \
-            --with-http_slice_module \
-            --with-http_stub_status_module \
-            --with-http_perl_module=dynamic \
-            --with-perl_modules_path=/usr/share/perl/5.26.1 \
-            --with-perl=/usr/bin/perl \
-            --http-log-path=/var/log/nginx/access.log \
-            --http-client-body-temp-path=/var/cache/nginx/client_temp \
-            --http-proxy-temp-path=/var/cache/nginx/proxy_temp \
-            --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp \
-            --http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp \
-            --http-scgi-temp-path=/var/cache/nginx/scgi_temp \
-            --with-mail=dynamic \
-            --with-mail_ssl_module \
-            --with-stream=dynamic \
-            --with-stream_ssl_module \
-            --with-stream_realip_module \
-            --with-stream_geoip_module=dynamic \
-            --with-stream_ssl_preread_module \
-            --with-compat \
-            --with-pcre=../pcre-8.44 \
-            --with-pcre-jit \
-            --with-zlib=../zlib-1.2.11 \
-            --with-openssl=../openssl-1.1.1g \
-            --with-openssl-opt=no-nextprotoneg \
-            --with-debug
-
+sudo ./configure --prefix=/usr/local/nginx --add-module=../nginx-rtmp-module --with-http_ssl_module
 make
 sudo make install
 
