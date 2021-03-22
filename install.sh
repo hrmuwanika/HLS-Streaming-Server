@@ -21,18 +21,18 @@ sudo service sshd restart
 # Update Server
 #--------------------------------------------------
 echo -e "\n============== Update Server ======================="
-sudo apt update 
-sudo apt upgrade -y
-sudo apt autoremove -y
+sudo apt update && sudo apt upgrade -y
+
+# Setup timezone
+sudo dpkg-reconfigure tzdata
 
 # Install FFMPEG
 sudo add-apt-repository ppa:jonathonf/ffmpeg-4
 sudo apt update
-sudo apt install -y ffmpeg libav-tools x264 x265
-ffmpeg -version
+sudo apt install -y ffmpeg x264 x265
 
 # Install nginx dependencies
-sudo apt install -y build-essential libpcre3 libpcre3-dev libssl-dev zlib1g-dev unzip git
+sudo apt install -y software-properties-common build-essential libpcre3 libpcre3-dev openssl libssl-dev zlib1g-dev git tree
 
 sudo mkdir ~/build && cd ~/build
 
@@ -40,17 +40,18 @@ sudo mkdir ~/build && cd ~/build
 git clone https://github.com/sergey-dryabzhinsky/nginx-rtmp-module.git
 
 # Download nginx
-sudo wget http://nginx.org/download/nginx-1.19.6.tar.gz
-sudo tar xzf nginx-1.19.6.tar.gz
+sudo wget http://nginx.org/download/nginx-1.19.6.tar.gz && sudo tar zxvf nginx-1.19.6.tar.gz
 cd nginx-1.19.6
 
 # Build nginx with nginx-rtmp
-sudo ./configure --with-http_ssl_module --with-http_stub_status_module --with-file-aio --add-module=../nginx-rtmp-module
-sudo make 
-sudo make install
+sudo ./configure --prefix=/usr/local/nginx \
+                 --with-http_ssl_module \
+                 --with-file-aio \
+                 --add-module=../nginx-rtmp-module
+sudo make && sudo make install
 
 # Start nginx server
-sudo /usr/local/nginx/sbin/nginx
+# sudo /usr/local/nginx/sbin/nginx
 
 # Setup live streaming
 sudo echo "" > /usr/local/nginx/conf/nginx.conf
