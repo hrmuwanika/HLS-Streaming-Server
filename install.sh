@@ -18,45 +18,43 @@ sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/
 sudo service sshd restart
 
 #--------------------------------------------------
-# Update your operating system’s software
+# Update Server
 #--------------------------------------------------
 echo -e "\n============== Update Server ======================="
 sudo apt update 
 sudo apt upgrade -y
 sudo apt autoremove -y
 
-# Setup the timezone
-sudo dpkg-reconfigure tzdata
-
 # Install FFMPEG
 sudo add-apt-repository ppa:jonathonf/ffmpeg-4
 sudo apt update
-sudo apt install -y ffmpeg x264 x265
+sudo apt install -y ffmpeg libav-tools x264 x265
+ffmpeg -version
 
-# Install necassry packages
-sudo apt install -y software-properties-common build-essential git tree
-sudo apt install -y openssl libssl-dev libpcre3 libpcre3-dev zlib1g-dev
+# Install nginx dependencies
+sudo apt install -y build-essential libpcre3 libpcre3-dev libssl-dev zlib1g-dev unzip git
 
 sudo mkdir ~/build && cd ~/build
 
 # Clone nginx-rtmp-module
-git clone --depth=1 https://github.com/arut/nginx-rtmp-module.git
+git clone https://github.com/sergey-dryabzhinsky/nginx-rtmp-module.git
 
-# Download the latest nginx
+# Download nginx
 sudo wget http://nginx.org/download/nginx-1.19.6.tar.gz
-sudo tar zxvf nginx-1.19.6.tar.gz
+sudo tar xzf nginx-1.19.6.tar.gz
 cd nginx-1.19.6
 
-
-
 # Build nginx with nginx-rtmp
-sudo ./configure --prefix=/usr/local/nginx --add-module=../nginx-rtmp-module --with-http_ssl_module
-make
+sudo ./configure --with-http_ssl_module --with-http_stub_status_module --with-file-aio --add-module=../nginx-rtmp-module
+sudo make 
 sudo make install
 
+# Start nginx server
+sudo /usr/local/nginx/sbin/nginx
+
 # Setup live streaming
-sudo echo "" > /etc/nginx/nginx.conf
-sudo cat <<EOF > /etc/nginx/nginx.conf
+sudo echo "" > /usr/local/nginx/conf/nginx.conf
+sudo cat <<EOF > /usr/local/nginx/conf/nginx.conf
 
 #############################################################################
 
@@ -72,21 +70,21 @@ events {
 # RTMP configuration
 rtmp {
     server {
-        listen 1935;            # Listen on standard RTMP port
+        listen 1935;         # Listen on standard RTMP port
         chunk_size 4000;
 
         application live {
-            live on;            # Allows live input
+            live on;         # Allows live input
 			
             hls on;                                          # Enable HTTP Live Streaming
-            hls_path /tmp/show/hls;         # hls fragments path
+            hls_path /usr/local/nginx/html/show/hls;         # hls fragments path
             hls_nested on;
             hls_fragment 2s;
             hls_playlist_length 16s;
 	    
             # This is the Dash application
             dash on;
-            dash_path /tmp/show/dash;       # dash fragments path
+            dash_path /usr/local/nginx/html/show/dash;       # dash fragments path
             dash_nested on;
             dash_fragment 2s;
             dash_playlist_length 16s;
@@ -95,7 +93,7 @@ rtmp {
 }
             
 http  {
-                sendfile off;
+                sendfile on;
                 tcp_nopush on;
                 aio on;
                 directio 512;
@@ -116,7 +114,7 @@ http  {
 				application/vnd.apple.mpegurl m3u8;
 				video/mp2t ts;
 			}
-			        root /tmp/show;
+			        root /usr/local/nginx/html/show;
                                 add_header Cache-Control no-cache;       # Disable cache
 				
 				# CORS setup
@@ -131,7 +129,7 @@ http  {
                                  video/mp4 mp4;
                         }
 
-		                 root /tmp/show;
+		                 root /usr/local/nginx/html/show;
                                  add_header Cache-Control no-cache;      # Disable cache
 				 
 				 # CORS setup
@@ -155,36 +153,35 @@ http  {
 ################################################################################################################
 EOF
 
-mkdir /tmp/show
-mkdir /tmp/show/hls
-mkdir /tmp/show/dash
+mkdir /usr/local/nginx/html/show
+mkdir /usr/local/nginx/html/show/hls
+mkdir /usr/local/nginx/html/show/dash
 
 # Create Nginx systemd daemon
-sudo cat <<EOF > /etc/systemd/system/nginx.service
+sudo cat <<EOF > /lib/systemd/system/nginx.service
 
 [Unit]
-Description=nginx - high performance web server
-Documentation=https://nginx.org/en/docs/
-After=network-online.target remote-fs.target nss-lookup.target
+Description=The NGINX HTTP and reverse proxy server
+After=syslog.target network-online.target remote-fs.target nss-lookup.target
 Wants=network-online.target
 
 [Service]
 Type=forking
 PIDFile=/var/run/nginx.pid
-ExecStartPre=/usr/sbin/nginx -t -c /etc/nginx/nginx.conf
-ExecStart=/usr/sbin/nginx -c /etc/nginx/nginx.conf
-ExecReload=/bin/kill -s HUP $MAINPID
-ExecStop=/bin/kill -s TERM $MAINPID
+ExecStartPre=/usr/local/nginx/sbin/nginx -t -c /usr/local/nginx/conf/nginx.conf
+ExecStart=/usr/local/nginx/sbin/nginx -c /usr/local/nginx/conf/nginx.conf
+ExecReload=/usr/local/nginx/sbin/nginx -s reload -c /usr/local/nginx/conf/nginx.conf
+ExecStop=/bin/kill -s QUIT $MAINPID
+PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target
 
 EOF
 
+sudo systemctl daemon-reload
 sudo systemctl enable nginx.service
-sudo systemctl start nginx.service
-
-sudo systemctl is-enabled nginx.service
+sudo systemctl restart nginx.service
 
 ###### Install SSL Certificates #########
 sudo apt install software-properties-common -y
