@@ -28,8 +28,7 @@ sudo apt autoremove -y
 # Install FFMPEG
 sudo add-apt-repository ppa:jonathonf/ffmpeg-4
 sudo apt update
-sudo apt install -y ffmpeg libav-tools x264 x265
-ffmpeg -version
+sudo apt install -y ffmpeg x264 x265
 
 # Install nginx dependencies
 sudo apt install -y build-essential libpcre3 libpcre3-dev libssl-dev zlib1g-dev unzip git
@@ -50,7 +49,7 @@ sudo make
 sudo make install
 
 # Start nginx server
-sudo /usr/local/nginx/sbin/nginx
+# sudo /usr/local/nginx/sbin/nginx
 
 # Setup live streaming
 sudo echo "" > /usr/local/nginx/conf/nginx.conf
@@ -70,11 +69,11 @@ events {
 # RTMP configuration
 rtmp {
     server {
-        listen 1935;         # Listen on standard RTMP port
+        listen 1935;            # Listen on standard RTMP port
         chunk_size 4000;
 
         application live {
-            live on;         # Allows live input
+            live on;            # Allows live input
 			
             hls on;                                          # Enable HTTP Live Streaming
             hls_path /usr/local/nginx/html/show/hls;         # hls fragments path
@@ -93,7 +92,7 @@ rtmp {
 }
             
 http  {
-                sendfile on;
+                sendfile off;
                 tcp_nopush on;
                 aio on;
                 directio 512;
