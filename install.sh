@@ -28,26 +28,33 @@ sudo apt autoremove -y
 # Install FFMPEG
 sudo add-apt-repository ppa:jonathonf/ffmpeg-4
 sudo apt update
-sudo apt install -y ffmpeg 
+sudo apt install -y ffmpeg libav-tools x264 x265
 ffmpeg -version
 
-# Install Nginx and RTMP module
-sudo add-apt-repository ppa:nginx/stable
-sudo apt update
-
-sudo apt install -y nginx 
-sudo apt install libnginx-mod-rtmp
-sudo systemctl stop nginx
-sudo systemctl start nginx
-
 # Install nginx dependencies
-sudo apt install -y build-essential libpcre3 libpcre3-dev libssl-dev 
+sudo apt install -y build-essential libpcre3 libpcre3-dev libssl-dev zlib1g-dev unzip git
 
-cd /usr/src
-git clone https://github.com/arut/nginx-rtmp-module
-cp /usr/src/nginx-rtmp-module/stat.xsl /var/www/html/stat.xsl
+sudo mkdir ~/build && cd ~/build
 
-sudo cat <<EOF > /etc/nginx/nginx.conf
+# Clone nginx-rtmp-module
+git clone https://github.com/sergey-dryabzhinsky/nginx-rtmp-module.git
+
+# Download nginx
+sudo wget http://nginx.org/download/nginx-1.19.6.tar.gz
+sudo tar xzf nginx-1.19.6.tar.gz
+cd nginx-1.19.6
+
+# Build nginx with nginx-rtmp
+sudo ./configure --with-http_ssl_module --with-http_stub_status_module --with-file-aio --add-module=../nginx-rtmp-module
+sudo make 
+sudo make install
+
+# Start nginx server
+sudo /usr/local/nginx/sbin/nginx
+
+# Setup live streaming
+sudo echo "" > /usr/local/nginx/conf/nginx.conf
+sudo cat <<EOF > /usr/local/nginx/conf/nginx.conf
 
 #############################################################################
 
@@ -70,33 +77,25 @@ rtmp {
             live on;         # Allows live input
 			
             hls on;                                          # Enable HTTP Live Streaming
-            hls_path /var/www/html/show/hls;                 # hls fragments path
+            hls_path /usr/local/nginx/html/show/hls;         # hls fragments path
             hls_nested on;
             hls_fragment 2s;
             hls_playlist_length 16s;
 	    
-	    # Setup AES encryption
-            # hls_keys on;
-            # hls_key_path /mnt/hls/keys;
-            # hls_key_url keys/;
-            # hls_fragments_per_key 10;
-            
             # This is the Dash application
             dash on;
-            dash_path /var/www/html/show/dash;               # dash fragments path
+            dash_path /usr/local/nginx/html/show/dash;       # dash fragments path
             dash_nested on;
             dash_fragment 2s;
             dash_playlist_length 16s;
-	    
-	    # disable consuming the stream from nginx as rtmp
-            deny play all;
         }
     }
 }
             
 http  {
-                sendfile off;
+                sendfile on;
                 tcp_nopush on;
+                aio on;
                 directio 512;
     
                 keepalive_timeout  65;
@@ -107,7 +106,7 @@ http  {
     # HTTP server required to serve the player and HLS fragments
     server {
                 listen 443;
-                server_name vps.rw;
+                server_name example.com;
 		       
 		# Serve HLS fragments
 		location /hls {
@@ -115,7 +114,7 @@ http  {
 				application/vnd.apple.mpegurl m3u8;
 				video/mp2t ts;
 			}
-			        root /var/www/html/show;
+			        root /usr/local/nginx/html/show;
                                 add_header Cache-Control no-cache;       # Disable cache
 				
 				# CORS setup
@@ -130,7 +129,7 @@ http  {
                                  video/mp4 mp4;
                         }
 
-		                 root /var/www/html/show;
+		                 root /usr/local/nginx/html/show;
                                  add_header Cache-Control no-cache;      # Disable cache
 				 
 				 # CORS setup
@@ -146,7 +145,7 @@ http  {
 
 		        location /stat.xsl {
 			         # XML stylesheet to view RTMP stats.
-                                 root /var/www/html;
+                                 root /usr/local/nginx/html;
 		        } 
 	          }
            }
@@ -154,9 +153,35 @@ http  {
 ################################################################################################################
 EOF
 
-mkdir /var/www/html/show
-mkdir /var/www/html/show/hls
-mkdir /var/www/html/show/dash
+mkdir /usr/local/nginx/html/show
+mkdir /usr/local/nginx/html/show/hls
+mkdir /usr/local/nginx/html/show/dash
+
+# Create Nginx systemd daemon
+sudo cat <<EOF > /lib/systemd/system/nginx.service
+
+[Unit]
+Description=The NGINX HTTP and reverse proxy server
+After=syslog.target network-online.target remote-fs.target nss-lookup.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/nginx.pid
+ExecStartPre=/usr/local/nginx/sbin/nginx -t -c /usr/local/nginx/conf/nginx.conf
+ExecStart=/usr/local/nginx/sbin/nginx -c /usr/local/nginx/conf/nginx.conf
+ExecReload=/usr/local/nginx/sbin/nginx -s reload -c /usr/local/nginx/conf/nginx.conf
+ExecStop=/bin/kill -s QUIT $MAINPID
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable nginx.service
+sudo systemctl restart nginx.service
 
 ###### Install SSL Certificates #########
 sudo apt install software-properties-common -y
