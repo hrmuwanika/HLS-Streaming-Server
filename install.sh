@@ -18,20 +18,23 @@ sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/
 sudo service sshd restart
 
 #--------------------------------------------------
-# Update Server
+# Update your operating system’s software
 #--------------------------------------------------
 echo -e "\n============== Update Server ======================="
 sudo apt update 
 sudo apt upgrade -y
 sudo apt autoremove -y
 
+# Setup the timezone
+sudo dpkg-reconfigure tzdata
+
 # Install FFMPEG
 sudo add-apt-repository ppa:jonathonf/ffmpeg-4
 sudo apt update
 sudo apt install -y ffmpeg x264 x265
 
-# Install nginx dependencies
-sudo apt install -y build-essential libpcre3 libpcre3-dev libssl-dev zlib1g-dev unzip git
+# Install necassry packages
+sudo apt install -y software-properties-common build-essential git ufw tree
 
 sudo mkdir ~/build && cd ~/build
 
@@ -39,21 +42,89 @@ sudo mkdir ~/build && cd ~/build
 git clone https://github.com/sergey-dryabzhinsky/nginx-rtmp-module.git
 
 # Download nginx
-sudo wget http://nginx.org/download/nginx-1.19.6.tar.gz
-sudo tar xzf nginx-1.19.6.tar.gz
+sudo https://nginx.org/download/nginx-1.19.6.tar.gz
+sudo tar zxvf nginx-1.19.6.tar.gz
 cd nginx-1.19.6
 
+# Download the mandatory Nginx dependencies' source code and extract it
+# PCRE version 8.44
+wget https://ftp.pcre.org/pub/pcre/pcre-8.44.tar.gz && tar xzvf pcre-8.44.tar.gz
+
+# zlib version 1.2.11
+wget https://www.zlib.net/zlib-1.2.11.tar.gz && tar xzvf zlib-1.2.11.tar.gz
+
+# OpenSSL version 1.1.1g
+wget https://www.openssl.org/source/openssl-1.1.1g.tar.gz && tar xzvf openssl-1.1.1g.tar.gz
+
+# Install optional Nginx dependencies
+sudo apt install -y perl libperl-dev libgd3 libgd-dev libgeoip1 libgeoip-dev geoip-bin libxml2 libxml2-dev libxslt1.1 libxslt1-dev
+
 # Build nginx with nginx-rtmp
-sudo ./configure --with-http_ssl_module --with-http_stub_status_module --with-file-aio --add-module=../nginx-rtmp-module
-sudo make 
+sudo    --add-module=../nginx-rtmp-module
+sudo ./configure --prefix=/etc/nginx \
+            --sbin-path=/usr/sbin/nginx \
+            --modules-path=/usr/lib/nginx/modules \
+            --conf-path=/etc/nginx/nginx.conf \
+            --error-log-path=/var/log/nginx/error.log \
+            --pid-path=/var/run/nginx.pid \
+            --lock-path=/var/run/nginx.lock \
+            --user=nginx \
+            --group=nginx \
+            --build=Ubuntu \
+            --builddir=nginx-1.19.2 \
+            --with-select_module \
+            --with-poll_module \
+            --with-threads \
+            --with-file-aio \
+            --with-http_ssl_module \
+            --with-http_v2_module \
+            --with-http_realip_module \
+            --with-http_addition_module \
+            --with-http_xslt_module=dynamic \
+            --with-http_image_filter_module=dynamic \
+            --with-http_geoip_module=dynamic \
+            --with-http_sub_module \
+            --with-http_dav_module \
+            --with-http_flv_module \
+            --with-http_mp4_module \
+            --with-http_gunzip_module \
+            --with-http_gzip_static_module \
+            --with-http_auth_request_module \
+            --with-http_random_index_module \
+            --with-http_secure_link_module \
+            --with-http_degradation_module \
+            --with-http_slice_module \
+            --with-http_stub_status_module \
+            --with-http_perl_module=dynamic \
+            --with-perl_modules_path=/usr/share/perl/5.26.1 \
+            --with-perl=/usr/bin/perl \
+            --http-log-path=/var/log/nginx/access.log \
+            --http-client-body-temp-path=/var/cache/nginx/client_temp \
+            --http-proxy-temp-path=/var/cache/nginx/proxy_temp \
+            --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp \
+            --http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp \
+            --http-scgi-temp-path=/var/cache/nginx/scgi_temp \
+            --with-mail=dynamic \
+            --with-mail_ssl_module \
+            --with-stream=dynamic \
+            --with-stream_ssl_module \
+            --with-stream_realip_module \
+            --with-stream_geoip_module=dynamic \
+            --with-stream_ssl_preread_module \
+            --with-compat \
+            --with-pcre=../pcre-8.44 \
+            --with-pcre-jit \
+            --with-zlib=../zlib-1.2.11 \
+            --with-openssl=../openssl-1.1.1g \
+            --with-openssl-opt=no-nextprotoneg \
+            --with-debug
+
+make
 sudo make install
 
-# Start nginx server
-# sudo /usr/local/nginx/sbin/nginx
-
 # Setup live streaming
-sudo echo "" > /usr/local/nginx/conf/nginx.conf
-sudo cat <<EOF > /usr/local/nginx/conf/nginx.conf
+sudo echo "" > /etc/nginx/nginx.conf
+sudo cat <<EOF > /etc/nginx/nginx.conf
 
 #############################################################################
 
@@ -76,14 +147,14 @@ rtmp {
             live on;            # Allows live input
 			
             hls on;                                          # Enable HTTP Live Streaming
-            hls_path /usr/local/nginx/html/show/hls;         # hls fragments path
+            hls_path /tmp/show/hls;         # hls fragments path
             hls_nested on;
             hls_fragment 2s;
             hls_playlist_length 16s;
 	    
             # This is the Dash application
             dash on;
-            dash_path /usr/local/nginx/html/show/dash;       # dash fragments path
+            dash_path /tmp/show/dash;       # dash fragments path
             dash_nested on;
             dash_fragment 2s;
             dash_playlist_length 16s;
@@ -113,7 +184,7 @@ http  {
 				application/vnd.apple.mpegurl m3u8;
 				video/mp2t ts;
 			}
-			        root /usr/local/nginx/html/show;
+			        root /tmp/show;
                                 add_header Cache-Control no-cache;       # Disable cache
 				
 				# CORS setup
@@ -128,7 +199,7 @@ http  {
                                  video/mp4 mp4;
                         }
 
-		                 root /usr/local/nginx/html/show;
+		                 root /tmp/show;
                                  add_header Cache-Control no-cache;      # Disable cache
 				 
 				 # CORS setup
@@ -152,35 +223,36 @@ http  {
 ################################################################################################################
 EOF
 
-mkdir /usr/local/nginx/html/show
-mkdir /usr/local/nginx/html/show/hls
-mkdir /usr/local/nginx/html/show/dash
+mkdir /tmp/show
+mkdir /tmp/show/hls
+mkdir /tmp/show/dash
 
 # Create Nginx systemd daemon
-sudo cat <<EOF > /lib/systemd/system/nginx.service
+sudo cat <<EOF > /etc/systemd/system/nginx.service
 
 [Unit]
-Description=The NGINX HTTP and reverse proxy server
-After=syslog.target network-online.target remote-fs.target nss-lookup.target
+Description=nginx - high performance web server
+Documentation=https://nginx.org/en/docs/
+After=network-online.target remote-fs.target nss-lookup.target
 Wants=network-online.target
 
 [Service]
 Type=forking
 PIDFile=/var/run/nginx.pid
-ExecStartPre=/usr/local/nginx/sbin/nginx -t -c /usr/local/nginx/conf/nginx.conf
-ExecStart=/usr/local/nginx/sbin/nginx -c /usr/local/nginx/conf/nginx.conf
-ExecReload=/usr/local/nginx/sbin/nginx -s reload -c /usr/local/nginx/conf/nginx.conf
-ExecStop=/bin/kill -s QUIT $MAINPID
-PrivateTmp=true
+ExecStartPre=/usr/sbin/nginx -t -c /etc/nginx/nginx.conf
+ExecStart=/usr/sbin/nginx -c /etc/nginx/nginx.conf
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
 
 [Install]
 WantedBy=multi-user.target
 
 EOF
 
-sudo systemctl daemon-reload
 sudo systemctl enable nginx.service
-sudo systemctl restart nginx.service
+sudo systemctl start nginx.service
+
+sudo systemctl is-enabled nginx.service
 
 ###### Install SSL Certificates #########
 sudo apt install software-properties-common -y
