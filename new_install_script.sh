@@ -159,9 +159,8 @@ events {
 # RTMP configuration
 rtmp {
     server {
-        listen 1935;            # Listen on standard RTMP port
+        listen 1935;         # Listen on standard RTMP port
         chunk_size 4000;
-
         application live {
             live on;                   # Allows live input
 			
@@ -170,6 +169,12 @@ rtmp {
             hls_nested on;
             hls_fragment 2s;
             hls_playlist_length 16s;
+	    hls_sync 100ms;
+	    
+            # Instruct clients to adjust resolution according to bandwidth
+            hls_variant _low BANDWIDTH=128000;          # Low bitrate, sub-SD resolution
+            hls_variant _mid BANDWIDTH=512000;          # Medium bitrate, SD resolution
+            hls_variant _hd720 BANDWIDTH=1024000;       # High bitrate, HD 720p resolution
 	    
             # This is the Dash application
             dash on;
@@ -177,14 +182,17 @@ rtmp {
             dash_nested on;
             dash_fragment 2s;
             dash_playlist_length 16s;
+	    
+	    # Disable consuming the stream from nginx as rtmp
+            deny play all;
         }
     }
 }
             
 http  {
-                sendfile off;
+                sendfile on;
                 tcp_nopush on;
-                aio on;
+                #aio on;
                 directio 512;
     
                 keepalive_timeout  65;
@@ -195,7 +203,7 @@ http  {
     # HTTP server required to serve the player and HLS fragments
     server {
                 listen 443;
-                server_name vps.rw;
+                server_name example.com;
 		       
 		# Serve HLS fragments
 		location /hls {
@@ -217,7 +225,6 @@ http  {
                                  application/dash+xml mpd;
                                  video/mp4 mp4;
                         }
-
 		                 root /tmp;
                                  add_header Cache-Control no-cache;      # Disable cache
 				 
@@ -231,13 +238,13 @@ http  {
 			         rtmp_stat all;
                                  rtmp_stat_stylesheet stat.xsl;     # Use stat.xsl stylesheet
 		        }
-
 		        location /stat.xsl {
 			         # XML stylesheet to view RTMP stats.
                                  root /usr/local/nginx/html;
 		        } 
 	          }
            }
+
 
 ################################################################################################################
 EOF
