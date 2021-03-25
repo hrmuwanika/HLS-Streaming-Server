@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Change this with your ffmpeg's path
-ffmpeg_path=/Users/erinc/Downloads/ffmpeg
+ffmpeg_path=/Users/henry/Downloads/ffmpeg
 
 # Ip adress of broadcast server
 server_ip=your_ip
