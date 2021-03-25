@@ -81,6 +81,12 @@ rtmp {
             hls_nested on;
             hls_fragment 2s;
             hls_playlist_length 16s;
+	    hls_sync 100ms;
+	    
+            # Instruct clients to adjust resolution according to bandwidth
+            hls_variant _low BANDWIDTH=128000;          # Low bitrate, sub-SD resolution
+            hls_variant _mid BANDWIDTH=512000;          # Medium bitrate, SD resolution
+            hls_variant _hd720 BANDWIDTH=1024000;       # High bitrate, HD 720p resolution
 	    
             # This is the Dash application
             dash on;
@@ -88,6 +94,9 @@ rtmp {
             dash_nested on;
             dash_fragment 2s;
             dash_playlist_length 16s;
+	    
+	    # Disable consuming the stream from nginx as rtmp
+            deny play all;
         }
     }
 }
@@ -95,7 +104,7 @@ rtmp {
 http  {
                 sendfile on;
                 tcp_nopush on;
-                aio on;
+                #aio on;
                 directio 512;
     
                 keepalive_timeout  65;
