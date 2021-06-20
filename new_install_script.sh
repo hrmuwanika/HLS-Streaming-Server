@@ -8,6 +8,13 @@
 # Place this content in it and then make the file executable:
 # sudo chmod +x install.sh
 ################################################################################
+#
+# Set to "True" to install certbot and have ssl enabled, "False" to use http
+ENABLE_SSL="True"
+# Provide Email to register ssl certificate
+ADMIN_EMAIL="odoo@example.com"
+# Set the website name
+WEBSITE_NAME="example.com"
 
 #----------------------------------------------------
 # Disable password authentication
@@ -160,6 +167,8 @@ events {
 rtmp {
     server {
         listen 1935;         # Listen on standard RTMP port
+	server_name $WEBSITE_NAME;
+	
         chunk_size 4000;
         application live {
             live on;                   # Allows live input
@@ -281,6 +290,23 @@ sudo systemctl daemon-reload
 sudo systemctl enable nginx.service
 sudo systemctl start nginx.service
 
-###### Install SSL Certificates #########
+#--------------------------------------------------
+# Enable ssl with certbot
+#--------------------------------------------------
+if [ $INSTALL_NGINX = "True" ] && [ $ENABLE_SSL = "True" ] && [ $ADMIN_EMAIL != "odoo@example.com" ]  && [ $WEBSITE_NAME != "example.com" ];then
+  sudo apt-get remove certbot
+  sudo snap install core
+  sudo snap refresh core
+  sudo snap install --classic certbot
+  sudo ln -s /snap/bin/certbot /usr/bin/certbot
+  sudo certbot --nginx -d $WEBSITE_NAME --noninteractive --agree-tos --email $ADMIN_EMAIL --redirect
+  sudo systemctl reload nginx  
+  echo "\n============ SSL/HTTPS is enabled! ========================"
+else
+  echo "\n==== SSL/HTTPS isn't enabled due to choice of the user or because of a misconfiguration! ======"
+fi
+
+sudo systemctl status nginx
+
 
  
