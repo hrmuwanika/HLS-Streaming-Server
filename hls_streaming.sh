@@ -52,7 +52,7 @@ sudo apt install -y ffmpeg x264 x265
 sudo echo "" > /etc/nginx/nginx.conf
 sudo cat <<EOF > /etc/nginx/nginx.conf
 
-#############################################################################
+load_module "modules/ngx_rtmp_module.so";
 
 worker_processes  auto;
 # error_log  logs/error.log;
