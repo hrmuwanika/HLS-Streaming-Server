@@ -73,6 +73,7 @@ rtmp {
 	allow publish 127.0.0.1;
 	allow publish 192.168.254.102;
         deny publish all;
+	pull rtmp://localhoste:1935/live name=channel1 live=1;
 	
         application live {
             live on;                        # Allows live input
