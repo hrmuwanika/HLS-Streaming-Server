@@ -6,7 +6,7 @@
 #-------------------------------------------------------------------------------
 #
 # Place this content in it and then make the file executable:
-# sudo chmod +x install.sh
+# sudo chmod +x hls_streaming.sh
 ################################################################################
 #
 # Set to "True" to install certbot and have ssl enabled, "False" to use http
