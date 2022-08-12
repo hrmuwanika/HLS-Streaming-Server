@@ -32,16 +32,18 @@ sudo apt update && sudo apt upgrade -y
 sudo apt autoremove -y
 
 # Install Nginx and Nginx RTMP module
-sudo apt -y install nginx 
+sudo apt -y install nginx-full 
 sudo apt -y install libnginx-mod-rtmp 
 sudo systemctl enable nginx.service
 sudo systemctl start nginx.service
 
-mkdir /var/www/hls
-mkdir /var/www/dash
+mkdir -p /var/www/hls
+mkdir -p /var/www/dash
+sudo chown -R www-data:www-data /var/www/hls/
+sudo chown -R www-data:www-data /var/www/dash/
 
 # Install FFMPEG
-sudo apt install -y libpcre3 libpcre3-dev libssl-dev zlib1g-dev
+sudo apt install -y build-essential libpcre3 libpcre3-dev libssl-dev zlib1g-dev
 sudo add-apt-repository ppa:jonathonf/ffmpeg-4
 sudo apt update
 sudo apt install -y ffmpeg x264 x265
@@ -58,13 +60,13 @@ worker_processes  auto;
 pid   /var/run/nginx.pid;
 
 events {
-    worker_connections  1024;
+    worker_connections  4096;
 }
 
 # RTMP configuration
 rtmp {
     server {
-        listen 1935;                       # Listen on standard RTMP port
+        listen 1935;                        # Listen on standard RTMP port
 	listen [::]:1935 ipv6only=on;
         
         chunk_size 4096;
@@ -73,20 +75,21 @@ rtmp {
         deny publish all;
 	
         application live {
-            live on;                       # Allows live input
+            live on;                        # Allows live input
 	    record off;
-	    deny play all;                 # disable RTMP viewer clients (not streaming clients)
+	    deny play all;                  # disable RTMP viewer clients (not streaming clients)
 		
            # This is the Hls application		
-            hls on;                        # Enable HTTP Live Streaming
-            hls_path /var/www/hls;         # hls fragments path
+            hls on;                         # Enable HTTP Live Streaming
+            hls_path /var/www/hls;          # hls fragments path
             hls_fragment 3s;
             hls_playlist_length 30s;
-	    hls_cleanup on;                # delete fragments on restart/shutdown
+	    hls_continuous on;
+	    hls_cleanup on;                 # delete fragments on restart/shutdown
 	      
             # This is the Dash application
 	    dash on;
-            dash_path /var/www/dash;    # dash fragments path
+            dash_path /var/www/dash;        # dash fragments path
             dash_fragment 2s; 
             dash_playlist_length 1m;
             dash_cleanup on;
@@ -170,6 +173,7 @@ http  {
 EOF
 
 sudo systemctl reload nginx
+sudo systemctl restart nginx
 
 sudo ufw allow 1935/tcp
 sudo ufw allow 8080/tcp
