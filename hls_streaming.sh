@@ -60,7 +60,7 @@ worker_processes  auto;
 pid   /var/run/nginx.pid;
 
 events {
-    worker_connections  4096;
+    worker_connections 1024;
 }
 
 # RTMP configuration
@@ -82,23 +82,23 @@ rtmp {
            # This is the Hls application		
             hls on;                         # Enable HTTP Live Streaming
             hls_path /var/www/hls;          # hls fragments path
-            hls_fragment 3s;
-            hls_playlist_length 30s;
+            hls_fragment 3;
+            hls_playlist_length 30;
 	    hls_continuous on;
 	    hls_cleanup on;                 # delete fragments on restart/shutdown
 	      
             # This is the Dash application
 	    dash on;
             dash_path /var/www/dash;        # dash fragments path
-            dash_fragment 2s; 
-            dash_playlist_length 1m;
+            dash_fragment 2; 
+            dash_playlist_length 60;
             dash_cleanup on;
         }
     }
 }
             
 http  {
-                sendfile on;
+                sendfile off;
                 tcp_nopush on;
                 #aio on;
                 directio 512;
