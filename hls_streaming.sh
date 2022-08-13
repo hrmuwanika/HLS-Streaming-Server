@@ -68,29 +68,28 @@ rtmp {
     server {
         listen 1935;                        # Listen on standard RTMP port
 	listen [::]:1935 ipv6only=on;
-        
         chunk_size 4096;
-	allow publish 127.0.0.1;
-	allow publish 192.168.254.102;
-        deny publish all;
-	pull rtmp://localhoste:1935/live name=channel1 live=1;
 	
-        application live {
+	allow publish 127.0.0.1;
+	allow publish 192.168.254.100;      # Ip address of the OBS server
+        deny publish all;
+	
+        application hmtv {
             live on;                        # Allows live input
 	    record off;
-	    deny play all;                  # disable RTMP viewer clients (not streaming clients)
+	    deny play all;                  # Disable consuming the stream from nginx as rtmp
 		
-           # This is the Hls application		
+            # This is the HLS application		
             hls on;                         # Enable HTTP Live Streaming
-            hls_path /var/www/hls;          # hls fragments path
+            hls_path /var/www/hls;          # HLS fragments path
             hls_fragment 3;
-            hls_playlist_length 30;
+            hls_playlist_length 60;
 	    hls_continuous on;
-	    hls_cleanup on;                 # delete fragments on restart/shutdown
+	    hls_cleanup on;                 # Delete fragments on restart/shutdown
 	      
             # This is the Dash application
 	    dash on;
-            dash_path /var/www/dash;        # dash fragments path
+            dash_path /var/www/dash;        # Dash fragments path
             dash_fragment 2; 
             dash_playlist_length 60;
             dash_cleanup on;
@@ -99,18 +98,14 @@ rtmp {
 }
             
 http  {
-                sendfile off;
-                tcp_nopush on;
-                #aio on;
-                directio 512;
+       sendfile off;
+       tcp_nopush on;
+       aio on;
+       directio 512;
+       default_type application/octet-stream;
     
-                keepalive_timeout  65;
-    
-                include mime.types;
-                default_type application/octet-stream;
-		
-    # HTTP server required to serve the player and HLS fragments
-    server {
+       # HTTP server required to serve the player and HLS fragments
+       server {
                 listen 8080;
 		listen [::]:8080;
                 server_name example.com;
@@ -162,9 +157,10 @@ http  {
 			         rtmp_stat all;
                                  rtmp_stat_stylesheet stat.xsl;     # Use stat.xsl stylesheet
 		        }
+			
 		        location /stat.xsl {
 			         # XML stylesheet to view RTMP stats.
-                                 root /var/www/html/rtmp;
+                                 root /var/www/html;
 		        } 
 	          }
            }
