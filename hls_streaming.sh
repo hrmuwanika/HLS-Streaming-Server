@@ -71,7 +71,7 @@ rtmp {
         chunk_size 4096;
 	
 	allow publish 127.0.0.1;
-	allow publish 192.168.254.100;      # Ip address of the OBS server
+	allow publish 192.168.254.0/24;      
         deny publish all;
 	
         application hmtv {
@@ -90,7 +90,7 @@ rtmp {
             # This is the Dash application
 	    dash on;
             dash_path /var/www/dash;        # Dash fragments path
-            dash_fragment 2; 
+            dash_fragment 3; 
             dash_playlist_length 60;
             dash_cleanup on;
         }
