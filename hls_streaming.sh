@@ -100,7 +100,7 @@ rtmp {
 http  {
        sendfile off;
        tcp_nopush on;
-       aio on;
+       #aio on;
        directio 512;
        default_type application/octet-stream;
     
