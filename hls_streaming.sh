@@ -32,8 +32,7 @@ sudo apt update && sudo apt upgrade -y
 sudo apt autoremove -y
 
 # Install Nginx and Nginx RTMP module
-sudo apt -y install nginx-full 
-sudo apt -y install libnginx-mod-rtmp 
+sudo apt install -y nginx-full libnginx-mod-rtmp 
 sudo systemctl enable nginx.service
 sudo systemctl start nginx.service
 
@@ -52,6 +51,7 @@ sudo apt install -y ffmpeg x264 x265
 sudo echo "" > /etc/nginx/nginx.conf
 sudo cat <<EOF > /etc/nginx/nginx.conf
 
+###############################################################################
 load_module "modules/ngx_rtmp_module.so";
 
 worker_processes  auto;
@@ -196,7 +196,7 @@ else
   echo "\n==== SSL/HTTPS isn't enabled due to choice of the user or because of a misconfiguration! ======"
 fi
 
-sudo nginx -t
+sudo nginx -t 
 
 
  
