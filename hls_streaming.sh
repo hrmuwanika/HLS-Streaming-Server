@@ -166,8 +166,9 @@ http  {
                              add_header 'Content-Type' 'text/plain charset=UTF-8';
                              add_header 'Content-Length' 0;
                              return 204;
-                        }		
-		
+                           }		
+		        }
+			
 		        # This URL provides RTMP statistics in XML
 		        location /stat {
 			         rtmp_stat all;
