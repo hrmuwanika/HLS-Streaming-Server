@@ -98,12 +98,16 @@ rtmp {
 }
             
 http  {
-       sendfile off;
+       include       mime.types;
+       sendfile on;
        tcp_nopush on;
        #aio on;
        directio 512;
        default_type application/octet-stream;
+       keepalive_timeout  65;
     
+       client_max_body_size 128M;
+       
        # HTTP server required to serve the player and HLS fragments
        server {
                 listen 8080;
