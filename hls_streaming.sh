@@ -110,50 +110,62 @@ http  {
        
        # HTTP server required to serve the player and HLS fragments
        server {
-                listen 8080;
-		listen [::]:8080;
-                server_name example.com;
+                 listen 8080;
+		 listen [::]:8080;
+                 server_name example.com;
 		
-		root /var/www/html;
-                index index.html;
+		 root /var/www/html;
+                 index index.html;
     
-		# Serve HLS fragments
-		location /hls {
-                        add_header Cache-Control no-cache;               # Disable cache
-			
-			# CORS setup
+		 # Serve HLS fragments
+		 location /hls {
+                  
+                        types {
+                                 application/vnd.apple.mpegurl m3u8;
+                                 video/mp2t ts;
+                        }
+		
+                        root /var/www;
+               
+	                add_header Cache-Control no-cache;
+
+                        # CORS setup
                         add_header 'Access-Control-Allow-Origin' '*' always;
                         add_header 'Access-Control-Expose-Headers' 'Content-Length';
 
-                        # allow CORS preflight requests
+                        # Allow CORS preflight requests
                         if (\$request_method = 'OPTIONS') {
-                           add_header 'Access-Control-Allow-Origin' '*';
-                           add_header 'Access-Control-Max-Age' 1728000;
-                           add_header 'Content-Type' 'text/plain charset=UTF-8';
-                           add_header 'Content-Length' 0;
-                           return 204;
-                         }
-			 
-			types {
-				application/vnd.apple.mpegurl m3u8;
-				video/mp2t ts;
-			}
-			        root /var/www;
-                                				
-		        }
+                             add_header 'Access-Control-Allow-Origin' '*';
+                             add_header 'Access-Control-Max-Age' 1728000;
+                             add_header 'Content-Type' 'text/plain charset=UTF-8';
+                             add_header 'Content-Length' 0;
+                             return 204;
+		      }
+		 }
 		
                  # Serve DASH fragments
                  location /dash {
-                        types {
-                                 application/dash+xml mpd;
-                                 video/mp4 mp4;
+		 
+                       types {
+                               application/dash+xml mpd;
+                               video/mp4 mp4;
                         }
-		                 root /var/www;
-                                 add_header Cache-Control no-cache;      # Disable cache
-				 
-				 # CORS setup
-                                add_header 'Access-Control-Allow-Origin' '*' always;
-                                add_header 'Access-Control-Expose-Headers' 'Content-Length';
+		 
+                        root /var/www;
+		 
+                        add_header Cache-Control no-cache;
+
+                        # CORS setup
+                        add_header 'Access-Control-Allow-Origin' '*' always;
+                        add_header 'Access-Control-Expose-Headers' 'Content-Length';
+
+                        # Allow CORS preflight requests
+                        if (\$request_method = 'OPTIONS') {
+                             add_header 'Access-Control-Allow-Origin' '*';
+                             add_header 'Access-Control-Max-Age' 1728000;
+                             add_header 'Content-Type' 'text/plain charset=UTF-8';
+                             add_header 'Content-Length' 0;
+                             return 204;
                         }		
 		
 		        # This URL provides RTMP statistics in XML
